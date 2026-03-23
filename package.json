@@ -1,0 +1,27 @@
+{
+  "name": "whitecat2",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Node.js full-stack skeleton with backend, frontend, and PostgreSQL",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev:backend": "node --watch src/backend/server.js",
+    "dev:frontend": "node --watch src/frontend/server.js",
+    "db:migrate": "node src/database/migrate.js up",
+    "db:migrate:up": "node src/database/migrate.js up",
+    "db:migrate:down": "node src/database/migrate.js down",
+    "db:migrate:status": "node src/database/migrate.js status",
+    "db:migrate:create": "node src/database/migrate.js create",
+    "start": "node src/backend/server.js",
+    "start:frontend": "node src/frontend/server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.3.1",
+    "express": "^4.21.2",
+    "pg": "^8.16.3"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
