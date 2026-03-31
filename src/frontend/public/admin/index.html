@@ -1,0 +1,51 @@
+﻿<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản trị | gatecat.net</title>
+    <meta name="description" content="Trang quản trị danh mục và sản phẩm trên gatecat.net" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
+    />
+    <link rel="stylesheet" href="/styles/profile.css?v=blank-20260317-account-profile" />
+    <link rel="stylesheet" href="/styles/admin.css?v=admin-20260331-account-layout" />
+    <link rel="stylesheet" href="/styles/head.css?v=blank-20260317-account-profile" />
+  </head>
+  <body>
+    __SITE_HEADER__
+
+    <main class="account-page">
+      <div class="account-shell">
+        <aside class="account-sidebar" aria-label="Danh mục quản trị">
+          <div class="account-sidebar-card admin-sidebar-card">
+            <p class="account-sidebar-label">Quản trị</p>
+            <nav class="account-nav admin-nav" aria-label="Điều hướng quản trị">
+              <a class="account-nav-link admin-nav-link" href="/admin/categories" data-admin-link="categories">
+                Quản lý danh mục
+              </a>
+              <a class="account-nav-link admin-nav-link" href="/admin/products" data-admin-link="products">
+                Quản lý sản phẩm
+              </a>
+            </nav>
+          </div>
+        </aside>
+
+        <section class="account-content">
+          <div class="admin-root" data-admin-root>
+            <div class="profile-panel admin-loading-card">
+              <p class="profile-eyebrow">Quản trị</p>
+              <h1 class="profile-title">Đang tải giao diện quản trị...</h1>
+            </div>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="/scripts/head.js?v=blank-20260317-account-profile" defer></script>
+    <script src="/scripts/admin.js?v=admin-20260331-router-ui" defer></script>
+  </body>
+</html>

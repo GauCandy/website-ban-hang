@@ -1,11 +1,13 @@
+/* ─── Site header ──────────────────────────────────── */
+
 .site-header {
   display: flex;
   justify-content: center;
   width: 100%;
   padding: 0 16px;
-  background: linear-gradient(135deg, #061a40 0%, #0a2f6b 48%, #0f4da8 100%);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 10px 22px rgba(6, 26, 64, 0.16);
+  background: #09090e;
+  border-bottom: 1px solid rgba(139, 92, 246, 0.2);
+  box-shadow: 0 1px 0 rgba(139, 92, 246, 0.08), 0 4px 32px rgba(0, 0, 0, 0.5);
 }
 
 .site-header-inner {
@@ -18,6 +20,8 @@
   padding: 0 20px;
   background: transparent;
 }
+
+/* ─── Brand ────────────────────────────────────────── */
 
 .brand {
   display: inline-flex;
@@ -38,8 +42,8 @@
 .brand-slice {
   position: absolute;
   display: block;
-  background: linear-gradient(135deg, #5de1ff 0%, #2563eb 100%);
-  box-shadow: 0 12px 20px rgba(37, 99, 235, 0.24);
+  background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
+  box-shadow: 0 4px 16px rgba(139, 92, 246, 0.45);
   transform: skewX(-28deg);
 }
 
@@ -73,18 +77,15 @@
 }
 
 .brand-copy strong {
-  font-family: "Orbitron", sans-serif;
+  font-size: clamp(15px, 2vw, 22px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  color: #f8fafc;
 }
 
-.brand-copy strong {
-  font-size: clamp(15px, 2vw, 22px);
-  font-weight: 800;
-  line-height: 1;
-  letter-spacing: 0.06em;
-  text-transform: lowercase;
-  white-space: nowrap;
-  color: #fff;
-}
+/* ─── Account controls ─────────────────────────────── */
 
 .account-link {
   display: inline-flex;
@@ -95,15 +96,16 @@
   padding: 0 14px;
   gap: 8px;
   height: 38px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: rgba(255, 255, 255, 0.08);
-  color: #fff;
+  border-radius: 8px;
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  background: rgba(139, 92, 246, 0.1);
+  color: #f8fafc;
   text-decoration: none;
   white-space: nowrap;
   transition:
-    background-color 140ms ease,
+    background 140ms ease,
     border-color 140ms ease,
+    box-shadow 140ms ease,
     transform 140ms ease;
 }
 
@@ -127,7 +129,7 @@
   height: 42px;
   padding: 0 0 0 14px;
   gap: 0;
-  border-radius: 999px;
+  border-radius: 8px;
   overflow: hidden;
 }
 
@@ -160,8 +162,9 @@
 .account-menu:hover .account-toggle,
 .account-menu:focus-within .account-toggle,
 .account-menu[data-open="true"] .account-toggle {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: rgba(255, 255, 255, 0.28);
+  background: rgba(139, 92, 246, 0.22);
+  border-color: rgba(139, 92, 246, 0.55);
+  box-shadow: 0 0 16px rgba(139, 92, 246, 0.2);
   transform: translateY(-1px);
 }
 
@@ -174,7 +177,7 @@
   height: 100%;
   overflow: hidden;
   border-radius: inherit;
-  background: linear-gradient(135deg, #5de1ff 0%, #2563eb 100%);
+  background: linear-gradient(135deg, #22d3ee 0%, #8b5cf6 100%);
 }
 
 .account-link--authenticated .account-text {
@@ -187,7 +190,7 @@
   width: 42px;
   height: 42px;
   border-left: 0;
-  border-radius: 50%;
+  border-radius: 6px;
 }
 
 .account-avatar-image {
@@ -207,13 +210,14 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-family: "Orbitron", sans-serif;
   font-size: 12px;
   font-weight: 700;
-  letter-spacing: 0.06em;
+  letter-spacing: 0.02em;
   color: #fff;
   z-index: 0;
 }
+
+/* ─── Dropdown ─────────────────────────────────────── */
 
 .account-dropdown {
   position: absolute;
@@ -221,12 +225,14 @@
   right: 0;
   display: grid;
   min-width: 220px;
-  padding: 10px;
-  border-radius: 18px;
-  border: 1px solid rgba(15, 77, 168, 0.12);
-  background: rgba(255, 255, 255, 0.98);
-  box-shadow: 0 22px 44px rgba(6, 26, 64, 0.2);
-  backdrop-filter: blur(12px);
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(139, 92, 246, 0.2);
+  background: #141422;
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.3),
+    0 20px 48px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(139, 92, 246, 0.08);
   opacity: 0;
   pointer-events: none;
   transform: translateY(8px);
@@ -252,27 +258,27 @@
   display: flex;
   align-items: center;
   width: 100%;
-  min-height: 42px;
+  min-height: 40px;
   padding: 0 10px;
   border: 0;
-  border-radius: 12px;
+  border-radius: 8px;
   background: transparent;
-  color: #111827;
+  color: #e2e8f0;
   font: inherit;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   text-align: left;
   text-decoration: none;
   cursor: pointer;
   transition:
-    background-color 140ms ease,
-    color 140ms ease;
+    background 120ms ease,
+    color 120ms ease;
 }
 
 .account-dropdown-link:hover,
 .account-dropdown-action:hover {
-  background: rgba(15, 77, 168, 0.08);
-  color: #0f4da8;
+  background: rgba(139, 92, 246, 0.12);
+  color: #c4b5fd;
 }
 
 .account-dropdown-form {
@@ -280,9 +286,11 @@
 }
 
 .account-dropdown-action--danger:hover {
-  background: rgba(220, 38, 38, 0.08);
-  color: #b91c1c;
+  background: rgba(239, 68, 68, 0.12);
+  color: #fca5a5;
 }
+
+/* ─── Responsive ───────────────────────────────────── */
 
 @media (max-width: 480px) {
   .site-header {
@@ -351,19 +359,19 @@
     flex-basis: 38px;
     width: 38px;
     height: 38px;
-    border-radius: 50%;
+    border-radius: 6px;
   }
 
   .account-dropdown {
     top: calc(100% + 10px);
     right: -2px;
     min-width: min(220px, calc(100vw - 24px));
-    padding: 8px;
+    padding: 6px;
   }
 
   .account-dropdown-link,
   .account-dropdown-action {
-    min-height: 40px;
-    font-size: 15px;
+    min-height: 38px;
+    font-size: 13px;
   }
 }

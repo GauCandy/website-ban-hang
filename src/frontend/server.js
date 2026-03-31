@@ -21,6 +21,8 @@ const apiBaseUrl =
 const publicDir = path.resolve(__dirname, "public");
 const storefrontPath = path.resolve(publicDir, "index.html");
 const accountProfilePath = path.resolve(publicDir, "user", "account", "profile.html");
+const accountAddressPath = path.resolve(publicDir, "user", "account", "address.html");
+const adminDashboardPath = path.resolve(publicDir, "admin", "index.html");
 const headTemplatePath = path.resolve(publicDir, "partials", "head.html");
 const SITE_HEADER_TOKEN = "__SITE_HEADER__";
 const ACCOUNT_CONTROL_TOKEN = "__ACCOUNT_CONTROL__";
@@ -32,17 +34,27 @@ const APP_SHELL_ROUTES = new Set([
   "/cart",
   "/cart/",
   "/user/purchase",
-  "/user/purchase/",
-  "/admin",
-  "/admin/"
+  "/user/purchase/"
 ]);
 const ACCOUNT_PROFILE_ROUTES = new Set([
   "/user/account/profile"
 ]);
+const ACCOUNT_ADDRESS_ROUTES = new Set([
+  "/user/account/address"
+]);
+const ADMIN_ROUTES = new Set([
+  "/admin",
+  "/admin/categories",
+  "/admin/products"
+]);
 const ACCOUNT_ROUTE_REDIRECTS = new Map([
   ["/user/account", "/user/account/profile"],
   ["/user/account/", "/user/account/profile"],
-  ["/user/account/profile/", "/user/account/profile"]
+  ["/user/account/profile/", "/user/account/profile"],
+  ["/user/account/address/", "/user/account/address"],
+  ["/admin/", "/admin"],
+  ["/admin/categories/", "/admin/categories"],
+  ["/admin/products/", "/admin/products"]
 ]);
 
 const contentTypes = {
@@ -137,6 +149,14 @@ function isStorefrontRequest(pathname) {
 
 function isAccountProfileRequest(pathname) {
   return ACCOUNT_PROFILE_ROUTES.has(pathname);
+}
+
+function isAccountAddressRequest(pathname) {
+  return ACCOUNT_ADDRESS_ROUTES.has(pathname);
+}
+
+function isAdminRequest(pathname) {
+  return ADMIN_ROUTES.has(pathname);
 }
 
 function getRouteRedirect(pathname) {
@@ -445,6 +465,10 @@ function renderAccountProfile(template, headTemplate, user) {
     .replace(ACCOUNT_PROFILE_CONTENT_TOKEN, buildAccountProfileContent(user));
 }
 
+function renderAccountShell(template, headTemplate, user) {
+  return template.replace(SITE_HEADER_TOKEN, renderSiteHeader(headTemplate, user));
+}
+
 async function fetchCurrentUser(cookieHeader = "") {
   if (!cookieHeader || !hasAuthCookie(cookieHeader)) {
     return null;
@@ -510,6 +534,46 @@ async function serveAccountProfile(req, res) {
   }
 }
 
+async function serveAccountAddress(req, res) {
+  try {
+    const [template, headTemplate, user] = await Promise.all([
+      fs.promises.readFile(accountAddressPath, "utf8"),
+      fs.promises.readFile(headTemplatePath, "utf8"),
+      fetchCurrentUser(req.headers.cookie || "")
+    ]);
+
+    writeResponse(
+      res,
+      200,
+      renderAccountShell(template, headTemplate, user),
+      contentTypes[".html"],
+      buildStaticHeaders(accountAddressPath)
+    );
+  } catch (_error) {
+    writeResponse(res, 500, "Internal server error");
+  }
+}
+
+async function serveAdminDashboard(req, res) {
+  try {
+    const [template, headTemplate, user] = await Promise.all([
+      fs.promises.readFile(adminDashboardPath, "utf8"),
+      fs.promises.readFile(headTemplatePath, "utf8"),
+      fetchCurrentUser(req.headers.cookie || "")
+    ]);
+
+    writeResponse(
+      res,
+      200,
+      renderAccountShell(template, headTemplate, user),
+      contentTypes[".html"],
+      buildStaticHeaders(adminDashboardPath)
+    );
+  } catch (_error) {
+    writeResponse(res, 500, "Internal server error");
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
@@ -555,6 +619,16 @@ const server = http.createServer(async (req, res) => {
 
   if (isAccountProfileRequest(url.pathname)) {
     await serveAccountProfile(req, res);
+    return;
+  }
+
+  if (isAccountAddressRequest(url.pathname)) {
+    await serveAccountAddress(req, res);
+    return;
+  }
+
+  if (isAdminRequest(url.pathname)) {
+    await serveAdminDashboard(req, res);
     return;
   }
 

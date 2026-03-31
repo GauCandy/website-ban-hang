@@ -1,0 +1,2 @@
+là tạo ra một kiểu dữ iệu trừu tuobgjw mới để mô tả các đặc trưng của đối tượng trong thực tế
+gồm 2 bước khai báo lớp khai báo các biến thành viên cài đặt các hàm thành viên

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="vi">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Profile | gatecat.net</title>
-    <meta name="description" content="Trang profile tài khoản trên gatecat.net" />
+    <title>Địa chỉ | gatecat.net</title>
+    <meta name="description" content="Trang địa chỉ giao hàng trên gatecat.net" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -12,6 +12,7 @@
       href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
     />
     <link rel="stylesheet" href="/styles/profile.css?v=blank-20260317-account-profile" />
+    <link rel="stylesheet" href="/styles/address.css?v=fix-20260331-address-ux" />
     <link rel="stylesheet" href="/styles/head.css?v=blank-20260317-account-profile" />
   </head>
   <body>
@@ -23,10 +24,10 @@
           <div class="account-sidebar-card">
             <p class="account-sidebar-label">Danh mục</p>
             <nav class="account-nav">
-              <a class="account-nav-link is-active" href="/user/account/profile" aria-current="page">
+              <a class="account-nav-link" href="/user/account/profile">
                 Profile
               </a>
-              <a class="account-nav-link" href="/user/account/address">
+              <a class="account-nav-link is-active" href="/user/account/address" aria-current="page">
                 Địa chỉ
               </a>
             </nav>
@@ -34,12 +35,17 @@
         </aside>
 
         <section class="account-content">
-          __ACCOUNT_PROFILE_CONTENT__
+          <div class="address-root" data-address-root>
+            <div class="address-panel address-panel--loading">
+              <p class="profile-eyebrow">Địa chỉ giao hàng</p>
+              <h1 class="address-title">Đang tải danh sách địa chỉ của bạn...</h1>
+            </div>
+          </div>
         </section>
       </div>
     </main>
 
     <script src="/scripts/head.js?v=blank-20260317-account-profile" defer></script>
-    <script src="/scripts/profile.js?v=blank-20260323-account-profile" defer></script>
+    <script src="/scripts/address.js?v=fix-20260331-address-ux" defer></script>
   </body>
 </html>

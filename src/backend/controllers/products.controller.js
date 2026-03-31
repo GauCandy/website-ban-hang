@@ -25,6 +25,9 @@ function mapProduct(row) {
   return {
     id: row.id,
     seller_id: row.seller_id,
+    category_id: row.category_id,
+    category_name: row.category_name,
+    category_slug: row.category_slug,
     seller_name: row.seller_name,
     name: row.name,
     slug: row.slug,
@@ -73,6 +76,9 @@ async function fetchProducts({ limit, status, search }) {
       select
         p.id,
         p.seller_id,
+        p.category_id,
+        c.name as category_name,
+        c.slug as category_slug,
         u.full_name as seller_name,
         p.name,
         p.slug,
@@ -92,6 +98,7 @@ async function fetchProducts({ limit, status, search }) {
         p.updated_at
       from products p
       join users u on u.id = p.seller_id
+      left join product_categories c on c.id = p.category_id
       ${whereClause}
       order by
         p.is_featured desc,

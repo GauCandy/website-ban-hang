@@ -15,7 +15,7 @@ CREATE TABLE IF NOT EXISTS users (
   created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   CONSTRAINT users_gender_check CHECK (
-    gender IS NULL OR gender IN ('male', 'female', 'other')
+    gender IS NULL OR gender IN ('male', 'female')
   ),
   CONSTRAINT users_role_check CHECK (role IN ('customer', 'admin')),
   CONSTRAINT users_account_status_check CHECK (
@@ -57,9 +57,26 @@ CREATE TABLE IF NOT EXISTS user_addresses (
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE IF NOT EXISTS product_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(120) NOT NULL,
+  slug VARCHAR(160) NOT NULL,
+  description TEXT,
+  category_status VARCHAR(32) NOT NULL DEFAULT 'active',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  CONSTRAINT product_categories_status_check CHECK (
+    category_status IN ('active', 'inactive')
+  )
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS product_categories_slug_unique_idx
+ON product_categories (lower(slug));
+
 CREATE TABLE IF NOT EXISTS products (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   seller_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  category_id UUID REFERENCES product_categories(id) ON DELETE SET NULL,
   name VARCHAR(255) NOT NULL,
   slug VARCHAR(255) NOT NULL,
   sku VARCHAR(100),
@@ -105,3 +122,39 @@ ON products (lower(slug));
 CREATE UNIQUE INDEX IF NOT EXISTS products_sku_unique_idx
 ON products (sku)
 WHERE sku IS NOT NULL;
+
+CREATE INDEX IF NOT EXISTS products_category_id_idx
+ON products (category_id);
+
+CREATE OR REPLACE VIEW v_user_profiles AS
+SELECT
+  u.id AS user_id,
+  u.full_name,
+  u.email,
+  u.phone_number,
+  u.gender,
+  u.birth_date,
+  u.avatar_url,
+  u.role,
+  u.account_status,
+  u.marketing_opt_in,
+  u.last_login_at,
+  u.created_at,
+  u.updated_at,
+  COALESCE(
+    (
+      SELECT json_agg(provider_row.provider ORDER BY provider_row.provider)
+      FROM (
+        SELECT DISTINCT ai.provider
+        FROM auth_identities ai
+        WHERE ai.user_id = u.id
+      ) AS provider_row
+    ),
+    '[]'::json
+  ) AS auth_providers,
+  EXISTS(
+    SELECT 1
+    FROM auth_identities ai
+    WHERE ai.user_id = u.id
+  ) AS has_identity
+FROM users u;
