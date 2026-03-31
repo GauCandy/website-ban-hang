@@ -12,7 +12,7 @@
       href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700;800&display=swap"
     />
     <link rel="stylesheet" href="/styles/profile.css?v=blank-20260317-account-profile" />
-    <link rel="stylesheet" href="/styles/admin.css?v=admin-20260401-image-fix" />
+    <link rel="stylesheet" href="/styles/admin.css?v=admin-20260331-account-layout" />
     <link rel="stylesheet" href="/styles/head.css?v=blank-20260317-account-profile" />
   </head>
   <body>
@@ -24,8 +24,11 @@
           <div class="account-sidebar-card admin-sidebar-card">
             <p class="account-sidebar-label">Quản trị</p>
             <nav class="account-nav admin-nav" aria-label="Điều hướng quản trị">
+              <a class="account-nav-link admin-nav-link" href="/admin/categories" data-admin-link="categories">
+                Quản lý danh mục
+              </a>
               <a class="account-nav-link admin-nav-link" href="/admin/products" data-admin-link="products">
-                Danh mục &amp; sản phẩm
+                Quản lý sản phẩm
               </a>
             </nav>
           </div>
@@ -43,6 +46,6 @@
     </main>
 
     <script src="/scripts/head.js?v=blank-20260317-account-profile" defer></script>
-    <script src="/scripts/admin.js?v=admin-20260401-image-fix" defer></script>
+    <script src="/scripts/admin.js?v=admin-20260331-router-ui" defer></script>
   </body>
 </html>

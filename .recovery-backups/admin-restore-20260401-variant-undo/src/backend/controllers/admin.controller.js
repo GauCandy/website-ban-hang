@@ -1,5 +1,4 @@
-﻿const path = require("path");
-const { getPool } = require("../db/pool");
+﻿const { getPool } = require("../db/pool");
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -21,24 +20,6 @@ function parseJsonBody(body) {
   }
 
   return body;
-}
-
-function getUploadedImageUrl(file) {
-  if (!file?.filename) {
-    return null;
-  }
-
-  return path.posix.join("/uploads", "products", file.filename);
-}
-
-function getUploadedImageUrls(files) {
-  if (!Array.isArray(files) || !files.length) {
-    return [];
-  }
-
-  return files
-    .map((file) => getUploadedImageUrl(file))
-    .filter(Boolean);
 }
 
 function normalizeRequiredText(value, label, maxLength) {
@@ -100,7 +81,7 @@ function normalizeInteger(value, label, fallback = 0) {
 
   const parsed = Number.parseInt(value, 10);
 
-  if (Number.isNaN(parsed) || parsed < -1) {
+  if (Number.isNaN(parsed) || parsed < 0) {
     throw createHttpError(400, `${label} không hợp lệ.`);
   }
 
@@ -157,65 +138,6 @@ function slugify(value) {
     .slice(0, 160);
 }
 
-async function generateUniqueCategorySlug(client, name, excludeId = null) {
-  const baseSlug = slugify(name) || `danh-muc-${Date.now()}`;
-
-  for (let index = 0; index < 50; index += 1) {
-    const candidate = index === 0 ? baseSlug : `${baseSlug}-${index + 1}`;
-    const values = [candidate];
-    const exclusionClause = excludeId ? `and id <> $2` : "";
-
-    if (excludeId) {
-      values.push(excludeId);
-    }
-
-    const existing = await client.query(
-      `select id from product_categories where lower(slug) = lower($1) ${exclusionClause} limit 1`,
-      values
-    );
-
-    if (!existing.rowCount) {
-      return candidate;
-    }
-  }
-
-  return `${baseSlug}-${Date.now()}`;
-}
-
-async function generateUniqueProductSlug(client, name) {
-  const baseSlug = slugify(name) || `san-pham-${Date.now()}`;
-
-  for (let index = 0; index < 50; index += 1) {
-    const candidate = index === 0 ? baseSlug : `${baseSlug}-${index + 1}`;
-    const existing = await client.query(
-      `select id from products where lower(slug) = lower($1) limit 1`,
-      [candidate]
-    );
-
-    if (!existing.rowCount) {
-      return candidate;
-    }
-  }
-
-  return `${baseSlug}-${Date.now()}`;
-}
-
-async function generateUniqueProductSku(client) {
-  for (let attempt = 0; attempt < 20; attempt += 1) {
-    const candidate = `SP-${Date.now().toString(36).toUpperCase()}-${Math.random()
-      .toString(36)
-      .slice(2, 6)
-      .toUpperCase()}`;
-    const existing = await client.query(`select id from products where sku = $1 limit 1`, [candidate]);
-
-    if (!existing.rowCount) {
-      return candidate;
-    }
-  }
-
-  return `SP-${Date.now()}-${Math.floor(Math.random() * 100000)}`;
-}
-
 function mapCategory(row) {
   return {
     id: row.id,
@@ -229,8 +151,6 @@ function mapCategory(row) {
 }
 
 function mapProduct(row) {
-  const images = Array.isArray(row.images) ? row.images : [];
-
   return {
     id: row.id,
     seller_id: row.seller_id,
@@ -249,7 +169,6 @@ function mapProduct(row) {
     track_inventory: row.track_inventory,
     product_status: row.product_status,
     cover_image_url: row.cover_image_url,
-    images,
     is_featured: row.is_featured,
     published_at: row.published_at,
     created_at: row.created_at,
@@ -279,102 +198,6 @@ async function ensureCategoryExists(client, categoryId) {
   return result.rows[0];
 }
 
-async function resolveCategory(client, categoryId, categoryName) {
-  if (categoryId) {
-    return ensureCategoryExists(client, categoryId);
-  }
-
-  if (!categoryName || !String(categoryName).trim()) {
-    return null;
-  }
-
-  const name = String(categoryName).trim();
-  const slug = slugify(name);
-
-  const existing = await client.query(
-    `select id, name, slug from product_categories where lower(slug) = lower($1) limit 1`,
-    [slug]
-  );
-
-  if (existing.rowCount) {
-    return existing.rows[0];
-  }
-
-  const created = await client.query(
-    `insert into product_categories (name, slug, category_status) values ($1, $2, 'active') returning id, name, slug`,
-    [name, slug]
-  );
-
-  return created.rows[0];
-}
-
-async function cleanupEmptyCategories(client, categoryId) {
-  if (!categoryId) return;
-
-  const result = await client.query(
-    `select count(*)::int as cnt from products where category_id = $1`,
-    [categoryId]
-  );
-
-  if (result.rows[0].cnt === 0) {
-    await client.query(`delete from product_categories where id = $1`, [categoryId]);
-  }
-}
-
-async function insertProductImages(client, productId, imageUrls) {
-  if (!Array.isArray(imageUrls) || !imageUrls.length) {
-    return;
-  }
-
-  const values = [];
-  const placeholders = imageUrls.map((imageUrl, index) => {
-    const offset = index * 3;
-    values.push(productId, imageUrl, index);
-    return `($${offset + 1}, $${offset + 2}, $${offset + 3})`;
-  });
-
-  await client.query(
-    `
-      insert into product_images (product_id, image_url, sort_order)
-      values ${placeholders.join(", ")}
-    `,
-    values
-  );
-}
-
-async function deleteProduct(req, res, next) {
-  const client = await getPool().connect();
-
-  try {
-    const productId = validateUuid(req.params.productId, "Mã sản phẩm");
-
-    const existing = await client.query(
-      `select id, category_id from products where id = $1 limit 1`,
-      [productId]
-    );
-
-    if (!existing.rowCount) {
-      throw createHttpError(404, "Không tìm thấy sản phẩm.");
-    }
-
-    const categoryId = existing.rows[0].category_id;
-
-    await client.query(`delete from products where id = $1`, [productId]);
-    await cleanupEmptyCategories(client, categoryId);
-
-    res.json({ message: "Đã xóa sản phẩm." });
-  } catch (error) {
-    if (error?.expose && error?.statusCode) {
-      res.status(error.statusCode).json({ message: error.message });
-      return;
-    }
-
-    next(error);
-  } finally {
-    client.release();
-  }
-}
-
 async function listCategories(_req, res, next) {
   try {
     const result = await getPool().query(
@@ -400,7 +223,7 @@ async function createCategory(req, res, next) {
   try {
     const body = parseJsonBody(req.body);
     const name = normalizeRequiredText(body.name, "Tên danh mục", 120);
-    const slug = await generateUniqueCategorySlug(client, name);
+    const slug = normalizeRequiredText(body.slug || slugify(name), "Slug danh mục", 160);
     const description = normalizeOptionalText(body.description, "Mô tả danh mục", 1000);
     const status = normalizeStatus(body.status, ["active", "inactive"], "Trạng thái danh mục", "active");
 
@@ -465,8 +288,8 @@ async function updateCategory(req, res, next) {
     const name = hasOwnProperty(body, "name")
       ? normalizeRequiredText(body.name, "Tên danh mục", 120)
       : current.name;
-    const slug = hasOwnProperty(body, "name")
-      ? await generateUniqueCategorySlug(client, name, categoryId)
+    const slug = hasOwnProperty(body, "slug")
+      ? normalizeRequiredText(body.slug || slugify(name), "Slug danh mục", 160)
       : current.slug;
     const description = hasOwnProperty(body, "description")
       ? normalizeOptionalText(body.description, "Mô tả danh mục", 1000)
@@ -581,14 +404,6 @@ async function listAdminProducts(req, res, next) {
           p.track_inventory,
           p.product_status,
           p.cover_image_url,
-          coalesce(
-            (
-              select json_agg(pi.image_url order by pi.sort_order asc, pi.created_at asc)
-              from product_images pi
-              where pi.product_id = p.id
-            ),
-            '[]'::json
-          ) as images,
           p.is_featured,
           p.published_at,
           p.created_at,
@@ -616,17 +431,10 @@ async function createProduct(req, res, next) {
   try {
     const body = parseJsonBody(req.body);
     const name = normalizeRequiredText(body.name, "Tên sản phẩm", 255);
-    const slug = await generateUniqueProductSlug(client, name);
-    const sku = await generateUniqueProductSku(client);
-    const mergedDescription = normalizeOptionalText(
-      body.description || body.short_description,
-      "Mô tả",
-      20000
-    );
-    const shortDescription = mergedDescription
-      ? mergedDescription.slice(0, 4000)
-      : null;
-    const description = mergedDescription;
+    const slug = normalizeRequiredText(body.slug || slugify(name), "Slug sản phẩm", 255);
+    const sku = normalizeOptionalText(body.sku, "SKU", 100);
+    const shortDescription = normalizeOptionalText(body.short_description, "Mô tả ngắn", 4000);
+    const description = normalizeOptionalText(body.description, "Mô tả chi tiết", 20000);
     const price = normalizeRequiredCurrency(body.price, "Giá bán");
     const compareAtPrice = normalizeOptionalCurrency(body.compare_at_price, "Giá niêm yết");
     const stockQuantity = normalizeInteger(body.stock_quantity, "Số lượng tồn", 0);
@@ -639,12 +447,7 @@ async function createProduct(req, res, next) {
     const categoryId = body.category_id
       ? validateUuid(body.category_id, "Mã danh mục")
       : null;
-    const uploadedImageUrls = getUploadedImageUrls(req.files);
-    const coverImageUrl = normalizeOptionalText(
-      uploadedImageUrls[0] || getUploadedImageUrl(req.file) || body.cover_image_url,
-      "Ảnh bìa",
-      2000
-    );
+    const coverImageUrl = normalizeOptionalText(body.cover_image_url, "Ảnh bìa", 2000);
     const trackInventory = normalizeBoolean(body.track_inventory, true);
     const isFeatured = normalizeBoolean(body.is_featured, false);
 
@@ -652,8 +455,7 @@ async function createProduct(req, res, next) {
       throw createHttpError(400, "Giá niêm yết phải lớn hơn hoặc bằng giá bán.");
     }
 
-    const category = await resolveCategory(client, categoryId, body.category_name);
-    const resolvedCategoryId = category ? category.id : null;
+    const category = await ensureCategoryExists(client, categoryId);
     const result = await client.query(
       `
         insert into products (
@@ -675,8 +477,8 @@ async function createProduct(req, res, next) {
           published_at
         )
         values (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, 'VND', $10, $11, $12::varchar, $13, $14,
-          case when $12::varchar = 'active' then now() else null end
+          $1, $2, $3, $4, $5, $6, $7, $8, $9, 'VND', $10, $11, $12, $13, $14,
+          case when $12 = 'active' then now() else null end
         )
         returning
           id,
@@ -701,7 +503,7 @@ async function createProduct(req, res, next) {
       `,
       [
         req.currentUser.id,
-        resolvedCategoryId,
+        categoryId,
         name,
         slug,
         sku,
@@ -717,11 +519,8 @@ async function createProduct(req, res, next) {
       ]
     );
 
-    await insertProductImages(client, result.rows[0].id, uploadedImageUrls);
-
     const product = mapProduct({
       ...result.rows[0],
-      images: uploadedImageUrls,
       category_name: category?.name || null,
       category_slug: category?.slug || null
     });
@@ -749,180 +548,11 @@ async function createProduct(req, res, next) {
   }
 }
 
-async function updateProduct(req, res, next) {
-  const client = await getPool().connect();
-
-  try {
-    const productId = validateUuid(req.params.productId, "Mã sản phẩm");
-    const body = parseJsonBody(req.body);
-
-    const existing = await client.query(
-      `select * from products where id = $1 limit 1`,
-      [productId]
-    );
-
-    if (!existing.rowCount) {
-      throw createHttpError(404, "Không tìm thấy sản phẩm.");
-    }
-
-    const current = existing.rows[0];
-
-    const name = hasOwnProperty(body, "name")
-      ? normalizeRequiredText(body.name, "Tên sản phẩm", 255)
-      : current.name;
-    const description = hasOwnProperty(body, "description")
-      ? normalizeOptionalText(body.description, "Mô tả", 20000)
-      : current.description;
-    const shortDescription = description ? description.slice(0, 4000) : current.short_description;
-    const price = hasOwnProperty(body, "price")
-      ? normalizeRequiredCurrency(body.price, "Giá bán")
-      : Number(current.price);
-    const compareAtPrice = hasOwnProperty(body, "compare_at_price")
-      ? normalizeOptionalCurrency(body.compare_at_price, "Giá niêm yết")
-      : (current.compare_at_price == null ? null : Number(current.compare_at_price));
-    const stockQuantity = hasOwnProperty(body, "stock_quantity")
-      ? normalizeInteger(body.stock_quantity, "Số lượng tồn", 0)
-      : Number(current.stock_quantity);
-    const productStatus = hasOwnProperty(body, "product_status")
-      ? normalizeStatus(body.product_status, ["draft", "active", "archived"], "Trạng thái sản phẩm", current.product_status)
-      : current.product_status;
-    const trackInventory = hasOwnProperty(body, "track_inventory")
-      ? normalizeBoolean(body.track_inventory, current.track_inventory)
-      : current.track_inventory;
-    const isFeatured = hasOwnProperty(body, "is_featured")
-      ? normalizeBoolean(body.is_featured, current.is_featured)
-      : current.is_featured;
-
-    if (compareAtPrice !== null && compareAtPrice < price) {
-      throw createHttpError(400, "Giá niêm yết phải lớn hơn hoặc bằng giá bán.");
-    }
-
-    let resolvedCategoryId = current.category_id;
-
-    if (hasOwnProperty(body, "category_id") || hasOwnProperty(body, "category_name")) {
-      const categoryId = body.category_id ? validateUuid(body.category_id, "Mã danh mục") : null;
-      const category = await resolveCategory(client, categoryId, body.category_name);
-      resolvedCategoryId = category ? category.id : null;
-    }
-
-    // Handle images: rebuild ordered list from existing_images + new uploads + image_order
-    const uploadedImageUrls = getUploadedImageUrls(req.files);
-    let keptImages = [];
-    if (hasOwnProperty(body, "existing_images")) {
-      try {
-        keptImages = JSON.parse(body.existing_images);
-        if (!Array.isArray(keptImages)) keptImages = [];
-      } catch (_e) {
-        keptImages = [];
-      }
-    }
-
-    let imageOrder = [];
-    if (hasOwnProperty(body, "image_order")) {
-      try {
-        imageOrder = JSON.parse(body.image_order);
-        if (!Array.isArray(imageOrder)) imageOrder = [];
-      } catch (_e) {
-        imageOrder = [];
-      }
-    }
-
-    const hasImageChanges = hasOwnProperty(body, "existing_images") || uploadedImageUrls.length > 0;
-    let newCoverImageUrl = current.cover_image_url;
-
-    if (hasImageChanges) {
-      await client.query(`delete from product_images where product_id = $1`, [productId]);
-
-      // Rebuild images in the order specified by image_order
-      const allImages = [];
-      let ei = 0;
-      let pi = 0;
-
-      if (imageOrder.length) {
-        imageOrder.forEach(function (type) {
-          if (type === "e" && ei < keptImages.length) {
-            allImages.push(keptImages[ei++]);
-          } else if (type === "p" && pi < uploadedImageUrls.length) {
-            allImages.push(uploadedImageUrls[pi++]);
-          }
-        });
-      } else {
-        keptImages.forEach(function (url) { allImages.push(url); });
-        uploadedImageUrls.forEach(function (url) { allImages.push(url); });
-      }
-
-      if (allImages.length) {
-        await insertProductImages(client, productId, allImages);
-        newCoverImageUrl = allImages[0];
-      } else {
-        newCoverImageUrl = null;
-      }
-    }
-
-    const result = await client.query(
-      `
-        update products
-        set name = $2,
-            short_description = $3,
-            description = $4,
-            price = $5,
-            compare_at_price = $6,
-            stock_quantity = $7,
-            track_inventory = $8,
-            product_status = $9::varchar,
-            is_featured = $10,
-            category_id = $11,
-            cover_image_url = $12,
-            published_at = case when $9::varchar = 'active' and published_at is null then now() else published_at end,
-            updated_at = now()
-        where id = $1
-        returning *
-      `,
-      [
-        productId,
-        name,
-        shortDescription,
-        description,
-        price,
-        compareAtPrice,
-        stockQuantity,
-        trackInventory,
-        productStatus,
-        isFeatured,
-        resolvedCategoryId,
-        newCoverImageUrl
-      ]
-    );
-
-    const oldCategoryId = current.category_id;
-
-    if (oldCategoryId && oldCategoryId !== resolvedCategoryId) {
-      await cleanupEmptyCategories(client, oldCategoryId);
-    }
-
-    res.json({
-      message: "Đã cập nhật sản phẩm.",
-      product: mapProduct(result.rows[0])
-    });
-  } catch (error) {
-    if (error?.expose && error?.statusCode) {
-      res.status(error.statusCode).json({ message: error.message });
-      return;
-    }
-
-    next(error);
-  } finally {
-    client.release();
-  }
-}
-
 module.exports = {
   listCategories,
   createCategory,
   updateCategory,
   deleteCategory,
   listAdminProducts,
-  createProduct,
-  updateProduct,
-  deleteProduct
+  createProduct
 };

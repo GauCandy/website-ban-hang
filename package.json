@@ -4,7 +4,7 @@
   "private": true,
   "description": "Node.js full-stack skeleton with backend, frontend, and PostgreSQL",
   "scripts": {
-    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\"",
+    "dev": "concurrently \"npm run dev:backend\" \"npm run dev:frontend\" \"cloudflared tunnel run my-tunnel\"",
     "dev:backend": "node --watch src/backend/server.js",
     "dev:frontend": "node --watch src/frontend/server.js",
     "db:migrate": "node src/database/migrate.js up",
@@ -19,6 +19,7 @@
     "cors": "^2.8.5",
     "dotenv": "^17.3.1",
     "express": "^4.21.2",
+    "multer": "^2.1.1",
     "pg": "^8.16.3"
   },
   "devDependencies": {

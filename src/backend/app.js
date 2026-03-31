@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const path = require("path");
 const env = require("./config/env");
 const apiRoutes = require("./routes");
 const authRoutes = require("./routes/auth.routes");
@@ -22,6 +23,7 @@ app.use(
 );
 app.use(express.json());
 app.use(csrfProtection({ allowedOrigin: env.webOrigin }));
+app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 app.get("/", (_req, res) => {
   res.json({

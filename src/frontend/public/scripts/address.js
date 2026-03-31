@@ -386,8 +386,9 @@
       <div class="address-panel">
         <div class="address-heading">
           <div>
+            <p class="address-eyebrow">Tài khoản</p>
             <h1 class="address-title">Địa chỉ</h1>
-            <p class="address-copy">Địa chỉ chính, địa chỉ phụ và thêm địa chỉ mới.</p>
+            <p class="address-copy">Quản lý địa chỉ giao hàng của bạn.</p>
           </div>
           <button class="address-primary-button" type="button" data-address-create>Thêm địa chỉ</button>
         </div>

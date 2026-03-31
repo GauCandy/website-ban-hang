@@ -1,17 +1,17 @@
 /* ─── Address panel ────────────────────────────────── */
 
 .address-panel {
-  display: grid;
-  gap: 24px;
-  padding: 28px;
   border: 1px solid rgba(139, 92, 246, 0.18);
   border-radius: 16px;
   background: #141422;
   box-shadow: 0 4px 32px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
 }
 
 .address-panel--empty {
+  display: grid;
   gap: 12px;
+  padding: 28px;
 }
 
 /* ─── Heading ──────────────────────────────────────── */
@@ -21,21 +21,31 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 16px;
+  padding: 28px 28px 24px;
+}
+
+.address-eyebrow {
+  margin: 0 0 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #8b5cf6;
 }
 
 .address-title {
   margin: 0;
   color: #f8fafc;
-  font-size: clamp(26px, 4vw, 32px);
-  line-height: 1.15;
+  font-size: clamp(20px, 3vw, 26px);
+  line-height: 1.2;
   font-weight: 700;
 }
 
 .address-copy {
-  margin: 8px 0 0;
+  margin: 6px 0 0;
   color: #64748b;
-  font-size: 15px;
-  line-height: 1.6;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 /* ─── Primary button ───────────────────────────────── */
@@ -67,23 +77,22 @@
 
 .address-simple-layout {
   display: grid;
-  gap: 20px;
 }
 
 .address-section {
   display: grid;
   gap: 14px;
-  padding: 20px;
-  border: 1px solid rgba(139, 92, 246, 0.15);
-  border-radius: 14px;
-  background: rgba(139, 92, 246, 0.04);
+  padding: 20px 28px;
+  border-top: 1px solid rgba(139, 92, 246, 0.12);
 }
 
 .address-section-title {
   margin: 0;
-  color: #f1f5f9;
-  font-size: 20px;
+  color: #8b5cf6;
+  font-size: 11px;
   font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .address-empty-text {
@@ -103,19 +112,19 @@
   display: grid;
   gap: 12px;
   padding: 16px;
-  border: 1px solid rgba(139, 92, 246, 0.15);
-  border-radius: 12px;
-  background: #1a1a2e;
-  transition: border-color 120ms ease, background 120ms ease;
+  border-radius: 10px;
+  background: rgba(139, 92, 246, 0.04);
+  border: 1px solid rgba(139, 92, 246, 0.08);
+  transition: border-color 120ms ease;
 }
 
 .address-card:hover {
-  border-color: rgba(139, 92, 246, 0.3);
+  border-color: rgba(139, 92, 246, 0.18);
 }
 
 .address-card.is-primary {
-  border-color: rgba(139, 92, 246, 0.35);
   background: rgba(139, 92, 246, 0.07);
+  border-color: rgba(139, 92, 246, 0.15);
 }
 
 .address-card-head {
@@ -433,14 +442,12 @@
 }
 
 @media (max-width: 480px) {
-  .address-panel,
-  .address-section {
-    padding: 18px;
-    border-radius: 14px;
+  .address-heading {
+    padding: 20px 18px 16px;
   }
 
-  .address-card {
-    padding: 14px;
+  .address-section {
+    padding: 16px 18px;
   }
 
   .address-modal {

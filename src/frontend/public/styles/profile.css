@@ -193,24 +193,23 @@ body {
 .profile-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  border-top: 1px solid rgba(139, 92, 246, 0.12);
+  gap: 2px;
+  padding: 2px;
+  padding-top: 0;
+  background: rgba(139, 92, 246, 0.06);
+  border-top: 1px solid rgba(139, 92, 246, 0.10);
 }
 
 .profile-stat {
   padding: 18px 24px;
-  border-right: 1px solid rgba(139, 92, 246, 0.1);
-  border-bottom: 1px solid rgba(139, 92, 246, 0.1);
+  background: #141422;
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
 
-.profile-stat:nth-child(2n) {
-  border-right: none;
-}
-
 .profile-stat--editable {
-  background: rgba(139, 92, 246, 0.04);
+  background: rgba(20, 20, 34, 0.95);
   align-content: start;
 }
 
@@ -423,10 +422,6 @@ body {
 
   .profile-grid {
     grid-template-columns: 1fr;
-  }
-
-  .profile-stat {
-    border-right: none;
   }
 
   .profile-panel-actions {

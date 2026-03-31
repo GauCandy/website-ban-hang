@@ -17,6 +17,7 @@ function mapProduct(row) {
   const price = Number(row.price || 0);
   const compareAtPrice = row.compare_at_price == null ? null : Number(row.compare_at_price);
   const publishedAt = row.published_at || row.created_at;
+  const images = Array.isArray(row.images) ? row.images : [];
   const discountPercent =
     compareAtPrice && compareAtPrice > price
       ? Math.round(((compareAtPrice - price) / compareAtPrice) * 100)
@@ -41,13 +42,14 @@ function mapProduct(row) {
     track_inventory: row.track_inventory,
     product_status: row.product_status,
     cover_image_url: row.cover_image_url,
+    images,
     is_featured: row.is_featured,
     published_at: publishedAt,
     created_at: row.created_at,
     updated_at: row.updated_at,
     discount_percent: discountPercent,
     is_on_sale: discountPercent > 0,
-    is_in_stock: Number(row.stock_quantity || 0) > 0 || !row.track_inventory
+    is_in_stock: Number(row.stock_quantity || 0) === -1 || Number(row.stock_quantity || 0) > 0 || !row.track_inventory
   };
 }
 
@@ -92,6 +94,14 @@ async function fetchProducts({ limit, status, search }) {
         p.track_inventory,
         p.product_status,
         p.cover_image_url,
+        coalesce(
+          (
+            select json_agg(pi.image_url order by pi.sort_order asc, pi.created_at asc)
+            from product_images pi
+            where pi.product_id = p.id
+          ),
+          '[]'::json
+        ) as images,
         p.is_featured,
         p.published_at,
         p.created_at,

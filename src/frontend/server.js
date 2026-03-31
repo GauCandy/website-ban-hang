@@ -44,7 +44,6 @@ const ACCOUNT_ADDRESS_ROUTES = new Set([
 ]);
 const ADMIN_ROUTES = new Set([
   "/admin",
-  "/admin/categories",
   "/admin/products"
 ]);
 const ACCOUNT_ROUTE_REDIRECTS = new Map([
@@ -53,7 +52,8 @@ const ACCOUNT_ROUTE_REDIRECTS = new Map([
   ["/user/account/profile/", "/user/account/profile"],
   ["/user/account/address/", "/user/account/address"],
   ["/admin/", "/admin"],
-  ["/admin/categories/", "/admin/categories"],
+  ["/admin/categories", "/admin/products"],
+  ["/admin/categories/", "/admin/products"],
   ["/admin/products/", "/admin/products"]
 ]);
 
@@ -591,6 +591,11 @@ const server = http.createServer(async (req, res) => {
   }
 
   if (url.pathname === "/auth" || url.pathname.startsWith("/auth/")) {
+    proxyRequest(req, res, new URL(req.url, apiBaseUrl));
+    return;
+  }
+
+  if (url.pathname === "/uploads" || url.pathname.startsWith("/uploads/")) {
     proxyRequest(req, res, new URL(req.url, apiBaseUrl));
     return;
   }

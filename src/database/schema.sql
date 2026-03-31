@@ -97,7 +97,7 @@ CREATE TABLE IF NOT EXISTS products (
   CONSTRAINT products_compare_at_price_check CHECK (
     compare_at_price IS NULL OR compare_at_price >= price
   ),
-  CONSTRAINT products_stock_quantity_check CHECK (stock_quantity >= 0),
+  CONSTRAINT products_stock_quantity_check CHECK (stock_quantity >= -1),
   CONSTRAINT products_status_check CHECK (
     product_status IN ('draft', 'active', 'archived')
   )
@@ -125,6 +125,17 @@ WHERE sku IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS products_category_id_idx
 ON products (category_id);
+
+CREATE TABLE IF NOT EXISTS product_images (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+  image_url TEXT NOT NULL,
+  sort_order INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS product_images_product_id_idx
+ON product_images (product_id, sort_order, created_at);
 
 CREATE OR REPLACE VIEW v_user_profiles AS
 SELECT
