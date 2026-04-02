@@ -13,11 +13,12 @@
     />
     <link rel="stylesheet" href="/styles/index.css?v=blank-20260317-index-head-split" />
     <link rel="stylesheet" href="/styles/head.css?v=blank-20260317-index-head-split" />
+    <link rel="stylesheet" href="/styles/home-products.css?v=20260401" />
   </head>
   <body>
     __SITE_HEADER__
 
-    <section class="hero">
+    __HERO_OPEN__
       <div class="hero-bg" aria-hidden="true"></div>
       <div class="hero-inner">
         <div class="hero-body">
@@ -26,7 +27,7 @@
           <p class="hero-tagline">Khám phá hàng nghìn sản phẩm chính hãng với giá cạnh tranh và giao hàng nhanh chóng trên toàn quốc.</p>
           <div class="hero-cta">
             <a class="hero-btn hero-btn--fill" href="/products">Khám phá ngay</a>
-            <a class="hero-btn hero-btn--outline" href="/auth/google">Đăng nhập</a>
+            __HERO_LOGIN__
           </div>
         </div>
         <div class="hero-art" aria-hidden="true">
@@ -35,29 +36,57 @@
           <span class="hero-glow"></span>
         </div>
       </div>
-    </section>
+    __HERO_CLOSE__
 
-    <section class="features">
-      <div class="features-inner">
-        <div class="feature-card">
-          <span class="feature-icon" aria-hidden="true">⚡</span>
-          <h3 class="feature-title">Giao hàng nhanh</h3>
-          <p class="feature-desc">Đơn hàng được xử lý và giao tới tay bạn trong thời gian ngắn nhất.</p>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon" aria-hidden="true">✓</span>
-          <h3 class="feature-title">Hàng chính hãng</h3>
-          <p class="feature-desc">Tất cả sản phẩm đều được kiểm định nguồn gốc và chứng nhận chính hãng.</p>
-        </div>
-        <div class="feature-card">
-          <span class="feature-icon" aria-hidden="true">↩</span>
-          <h3 class="feature-title">Đổi trả dễ dàng</h3>
-          <p class="feature-desc">Chính sách đổi trả linh hoạt trong vòng 30 ngày, không cần lý do.</p>
-        </div>
+    <section class="home-products">
+      <div class="home-products-inner">
+        <h2 class="home-products-heading"><span>Sản phẩm</span> dành cho bạn</h2>
+        <div id="home-products"></div>
       </div>
     </section>
 
+    <footer class="site-footer">
+      <div class="footer-top">
+        <div class="footer-col">
+          <h4 class="footer-heading">GateCat.net</h4>
+          <p class="footer-text">Nền tảng mua sắm trực tuyến uy tín — cung cấp hàng nghìn sản phẩm chính hãng với giá tốt nhất, giao hàng nhanh toàn quốc.</p>
+        </div>
+        <div class="footer-col">
+          <h4 class="footer-heading">Dịch vụ</h4>
+          <ul class="footer-list">
+            <li>⚡ Giao hàng nhanh</li>
+            <li>✓ Hàng chính hãng 100%</li>
+            <li>↩ Đổi trả trong 30 ngày</li>
+            <li>🔒 Thanh toán an toàn</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 class="footer-heading">Hỗ trợ</h4>
+          <ul class="footer-list">
+            <li>Chính sách bảo hành</li>
+            <li>Chính sách đổi trả</li>
+            <li>Điều khoản sử dụng</li>
+            <li>Chính sách bảo mật</li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 class="footer-heading">Liên hệ</h4>
+          <ul class="footer-list">
+            <li>CTech, Thường Tín, Hà Nội, Việt Nam</li>
+            <li>Email: contact@gatecat.net</li>
+            <li>Hotline: 1900-xxxx</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© 2026 gatecat.net — Created & Powered by <strong>GauCandy</strong></span>
+        <span class="footer-sep">·</span>
+        <span>Hosted by <strong>WhiteCat</strong></span>
+      </div>
+    </footer>
+
     <main id="app"></main>
     <script src="/scripts/head.js?v=blank-20260317-index-head-split" defer></script>
+    <script src="/scripts/home-products.js?v=20260401" defer></script>
   </body>
 </html>

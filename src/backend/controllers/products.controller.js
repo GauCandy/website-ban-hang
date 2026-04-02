@@ -171,7 +171,48 @@ async function getHomepageProducts(req, res, next) {
   }
 }
 
+async function getProductBySlug(req, res, next) {
+  try {
+    const pool = getPool();
+    const { slug } = req.params;
+
+    const result = await pool.query(
+      `
+        select
+          p.id, p.seller_id, p.category_id,
+          c.name as category_name, c.slug as category_slug,
+          u.full_name as seller_name,
+          p.name, p.slug, p.sku, p.short_description, p.description,
+          p.price, p.compare_at_price, p.currency_code,
+          p.stock_quantity, p.track_inventory, p.product_status,
+          p.cover_image_url,
+          coalesce(
+            (select json_agg(pi.image_url order by pi.sort_order asc, pi.created_at asc)
+             from product_images pi where pi.product_id = p.id),
+            '[]'::json
+          ) as images,
+          p.is_featured, p.published_at, p.created_at, p.updated_at
+        from products p
+        join users u on u.id = p.seller_id
+        left join product_categories c on c.id = p.category_id
+        where p.slug = $1 and p.product_status = 'active'
+        limit 1
+      `,
+      [slug]
+    );
+
+    if (!result.rows.length) {
+      return res.status(404).json({ error: "Không tìm thấy sản phẩm." });
+    }
+
+    res.json({ product: mapProduct(result.rows[0]) });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getHomepageProducts,
+  getProductBySlug,
   listProducts
 };

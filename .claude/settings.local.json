@@ -1,7 +1,32 @@
 {
   "permissions": {
     "allow": [
-      "Bash(node src/database/migrations/migrate.js up)"
+      "Bash(node src/database/migrations/migrate.js up)",
+      "Bash(xargs grep:*)",
+      "WebFetch(domain:nguyencongpc.vn)",
+      "Bash(PGPASSWORD=MeoMeo123 psql -h node-1.whitecat.cloud -p 20100 -U whitecat -d whitecat_store -f src/database/seed-products.sql)",
+      "Bash(PGPASSWORD=MeoMeo123 psql -h node-1.whitecat.cloud -p 20100 -U whitecat -d whitecat_store -c \"SELECT c.name as category, COUNT\\(*\\) as products FROM products p JOIN product_categories c ON p.category_id = c.id WHERE p.product_status = 'active' GROUP BY c.name ORDER BY products DESC;\")",
+      "Bash(PGPASSWORD=MeoMeo123 psql -h node-1.whitecat.cloud -p 20100 -U whitecat -d whitecat_store -c \"SELECT name, cover_image_url FROM products WHERE cover_image_url IS NOT NULL LIMIT 5;\")",
+      "Bash(PGPASSWORD=MeoMeo123 psql -h node-1.whitecat.cloud -p 20100 -U whitecat -d whitecat_store -t -A -c \"SELECT slug FROM products WHERE cover_image_url IS NULL AND product_status='active' ORDER BY name;\")",
+      "Bash(node download-images.js)",
+      "WebSearch",
+      "WebFetch(domain:www.bhphotovideo.com)",
+      "WebFetch(domain:www.kingston.com)",
+      "WebFetch(domain:www.nvidia.com)",
+      "WebFetch(domain:www.techpowerup.com)",
+      "WebFetch(domain:pcpartpicker.com)",
+      "WebFetch(domain:www.samsung.com)",
+      "WebFetch(domain:www.logitechg.com)",
+      "WebFetch(domain:tiki.vn)",
+      "Bash(node download-remaining.js)",
+      "Bash(node fix-keyboard-images.js)",
+      "Bash(PGPASSWORD=MeoMeo123 psql -h node-1.whitecat.cloud -p 20100 -U whitecat -d whitecat_store -t -A -c \"SELECT cover_image_url FROM products WHERE slug LIKE 'ban-phim-%' OR slug LIKE 'dareu-%' OR slug LIKE 'darmoshark-%' OR slug LIKE 'machenike-%' OR slug LIKE 'motospeed-%' OR slug LIKE 'fuhlen-%' OR slug = 'asus-tuf-gaming-k3-gen2';\")",
+      "Bash(psql \"postgresql://whitecat:MeoMeo123@node-1.whitecat.cloud:20100/whitecat_store\" -f src/database/seed-pc-components.sql)",
+      "Bash(psql \"postgresql://whitecat:MeoMeo123@node-1.whitecat.cloud:20100/whitecat_store\" -c \"SELECT slug FROM products WHERE slug LIKE 'intel-core%' OR slug LIKE 'amd-ryzen%' OR slug LIKE '%rtx%' OR slug LIKE '%rx-%' ORDER BY slug;\")",
+      "Bash(psql \"postgresql://whitecat:MeoMeo123@node-1.whitecat.cloud:20100/whitecat_store\" -c \"DELETE FROM products WHERE slug = 'intel-core-i9-14900k';\")",
+      "Bash(psql \"postgresql://whitecat:MeoMeo123@node-1.whitecat.cloud:20100/whitecat_store\" -f \"c:/Users/Gau_Candy/OneDrive/Documents/whitecat2/src/database/seed-pc-components.sql\")",
+      "Bash(node download-product-images.js)",
+      "WebFetch(domain:gearvn.com)"
     ]
   }
 }

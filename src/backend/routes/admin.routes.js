@@ -1,7 +1,7 @@
 const express = require("express");
 const requireAuth = require("../middleware/require-auth");
 const requireAdmin = require("../middleware/require-admin");
-const uploadProductImage = require("../middleware/upload-product-image");
+const { uploadProductImage, deduplicateByHash } = require("../middleware/upload-product-image");
 const {
   listCategories,
   createCategory,
@@ -23,8 +23,8 @@ router.patch("/categories/:categoryId", updateCategory);
 router.delete("/categories/:categoryId", deleteCategory);
 
 router.get("/products", listAdminProducts);
-router.post("/products", uploadProductImage.array("image_file", 8), createProduct);
-router.patch("/products/:productId", uploadProductImage.array("image_file", 8), updateProduct);
+router.post("/products", uploadProductImage.array("image_file", 8), deduplicateByHash, createProduct);
+router.patch("/products/:productId", uploadProductImage.array("image_file", 8), deduplicateByHash, updateProduct);
 router.delete("/products/:productId", deleteProduct);
 
 module.exports = router;

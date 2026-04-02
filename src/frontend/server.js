@@ -23,6 +23,8 @@ const storefrontPath = path.resolve(publicDir, "index.html");
 const accountProfilePath = path.resolve(publicDir, "user", "account", "profile.html");
 const accountAddressPath = path.resolve(publicDir, "user", "account", "address.html");
 const adminDashboardPath = path.resolve(publicDir, "admin", "index.html");
+const productDetailPath = path.resolve(publicDir, "product.html");
+const searchPagePath = path.resolve(publicDir, "search.html");
 const headTemplatePath = path.resolve(publicDir, "partials", "head.html");
 const SITE_HEADER_TOKEN = "__SITE_HEADER__";
 const ACCOUNT_CONTROL_TOKEN = "__ACCOUNT_CONTROL__";
@@ -304,7 +306,15 @@ function renderSiteHeader(template, user) {
 }
 
 function renderStorefront(template, headTemplate, user) {
-  return template.replace(SITE_HEADER_TOKEN, renderSiteHeader(headTemplate, user));
+  var html = template.replace(SITE_HEADER_TOKEN, renderSiteHeader(headTemplate, user));
+  if (user) {
+    html = html.replace(/__HERO_OPEN__[\s\S]*?__HERO_CLOSE__/, "");
+  } else {
+    html = html.replace("__HERO_OPEN__", '<section class="hero">');
+    html = html.replace("__HERO_CLOSE__", "</section>");
+    html = html.replace("__HERO_LOGIN__", '<a class="hero-btn hero-btn--outline" href="/auth/google">Đăng nhập</a>');
+  }
+  return html;
 }
 
 function formatDateTime(value) {
@@ -574,6 +584,46 @@ async function serveAdminDashboard(req, res) {
   }
 }
 
+async function serveProductDetail(req, res) {
+  try {
+    const [template, headTemplate, user] = await Promise.all([
+      fs.promises.readFile(productDetailPath, "utf8"),
+      fs.promises.readFile(headTemplatePath, "utf8"),
+      fetchCurrentUser(req.headers.cookie || "")
+    ]);
+
+    writeResponse(
+      res,
+      200,
+      renderAccountShell(template, headTemplate, user),
+      contentTypes[".html"],
+      buildStaticHeaders(productDetailPath)
+    );
+  } catch (_error) {
+    writeResponse(res, 500, "Internal server error");
+  }
+}
+
+async function serveSearchPage(req, res) {
+  try {
+    const [template, headTemplate, user] = await Promise.all([
+      fs.promises.readFile(searchPagePath, "utf8"),
+      fs.promises.readFile(headTemplatePath, "utf8"),
+      fetchCurrentUser(req.headers.cookie || "")
+    ]);
+
+    writeResponse(
+      res,
+      200,
+      renderAccountShell(template, headTemplate, user),
+      contentTypes[".html"],
+      buildStaticHeaders(searchPagePath)
+    );
+  } catch (_error) {
+    writeResponse(res, 500, "Internal server error");
+  }
+}
+
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
 
@@ -634,6 +684,16 @@ const server = http.createServer(async (req, res) => {
 
   if (isAdminRequest(url.pathname)) {
     await serveAdminDashboard(req, res);
+    return;
+  }
+
+  if (url.pathname.startsWith("/product/") && url.pathname.split("/").length === 3) {
+    await serveProductDetail(req, res);
+    return;
+  }
+
+  if (url.pathname === "/search" || url.pathname === "/search/") {
+    await serveSearchPage(req, res);
     return;
   }
 
