@@ -1,5 +1,23 @@
 const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
+function getAllowedOrigins(options = {}) {
+  const origins = new Set();
+
+  if (typeof options.allowedOrigin === "string" && options.allowedOrigin) {
+    origins.add(options.allowedOrigin);
+  }
+
+  if (Array.isArray(options.allowedOrigins)) {
+    options.allowedOrigins.forEach((origin) => {
+      if (typeof origin === "string" && origin) {
+        origins.add(origin);
+      }
+    });
+  }
+
+  return origins;
+}
+
 function extractOrigin(req) {
   const originHeader = req.headers.origin;
 
@@ -21,7 +39,7 @@ function extractOrigin(req) {
 }
 
 function csrfProtection(options) {
-  const allowedOrigin = options.allowedOrigin;
+  const allowedOrigins = getAllowedOrigins(options);
 
   return (req, res, next) => {
     if (SAFE_METHODS.has(req.method)) {
@@ -31,7 +49,7 @@ function csrfProtection(options) {
 
     const requestOrigin = extractOrigin(req);
 
-    if (!requestOrigin || requestOrigin !== allowedOrigin) {
+    if (!requestOrigin || !allowedOrigins.has(requestOrigin)) {
       res.status(403).json({
         message: "Yêu cầu bị chặn bởi CSRF protection."
       });

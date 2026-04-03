@@ -20,6 +20,7 @@
     filterStatus: "all",
     filterCategory: "all",
     filterStock: "all",
+    filterFeatured: "all",
     filtersOpen: false,
     submitting: false,
     currentPage: 1,
@@ -167,6 +168,8 @@
       if (state.filterStock === "out" && Number(product.stock_quantity) !== 0) return false;
       if (state.filterStock === "low" && (Number(product.stock_quantity) === -1 || Number(product.stock_quantity) > 5)) return false;
       if (state.filterStock === "unlimited" && Number(product.stock_quantity) !== -1) return false;
+      if (state.filterFeatured === "hot" && !product.is_featured) return false;
+      if (state.filterFeatured === "normal" && product.is_featured) return false;
       if (state.searchQuery) {
         var query = state.searchQuery.toLowerCase();
         var matchesName = String(product.name || "").toLowerCase().includes(query);
@@ -218,8 +221,13 @@
 
     var outOfStock = state.products.filter(function (p) { return Number(p.stock_quantity) === 0; }).length;
     var activeCount = state.products.filter(function (p) { return p.product_status === "active"; }).length;
+    var hotCount = state.products.filter(function (p) { return !!p.is_featured; }).length;
 
-    var hasActiveFilters = state.filterStatus !== "all" || state.filterCategory !== "all" || state.filterStock !== "all";
+    var hasActiveFilters =
+      state.filterStatus !== "all" ||
+      state.filterCategory !== "all" ||
+      state.filterStock !== "all" ||
+      state.filterFeatured !== "all";
     var filtered = getFilteredProducts();
 
     return '<div class="admin-toolbar"><div class="admin-toolbar-left"><h3 class="admin-section-title">Sản phẩm</h3><div class="admin-toolbar-stats"><span class="admin-stat">' + state.products.length + ' sản phẩm</span><span class="admin-stat is-success">' + activeCount + ' đang bán</span>' + (outOfStock > 0 ? '<span class="admin-stat is-danger">' + outOfStock + ' hết hàng</span>' : '') + '</div></div><button class="admin-button" type="button" data-open-modal>+ Thêm sản phẩm</button></div>' +
@@ -362,7 +370,54 @@
     state.productForm.is_featured = formData.get("is_featured") === "on";
   }
 
+  function enhanceProductsAdminUi() {
+    var stats = root.querySelector(".admin-toolbar-stats");
+    var hotCount = state.products.filter(function (p) { return !!p.is_featured; }).length;
+    if (stats && hotCount > 0 && !stats.querySelector("[data-hot-stat]")) {
+      var hotStat = document.createElement("span");
+      hotStat.className = "admin-stat is-warning";
+      hotStat.setAttribute("data-hot-stat", "true");
+      hotStat.textContent = hotCount + " \u0111ang hot";
+      stats.appendChild(hotStat);
+    }
+
+    var filtersPanel = root.querySelector("[data-filters-panel]");
+    if (filtersPanel && !filtersPanel.querySelector("[data-featured-filter-section]")) {
+      var featuredSection = document.createElement("div");
+      featuredSection.className = "admin-filter-section";
+      featuredSection.setAttribute("data-featured-filter-section", "true");
+      featuredSection.innerHTML =
+        '<span class="admin-filter-label">\u0110\u1ed9 hot</span>' +
+        '<div class="admin-filter-chips">' +
+          '<button class="admin-filter-chip' + (state.filterFeatured === "all" ? ' is-active' : '') + '" type="button" data-filter-featured-chip="all">T\u1ea5t c\u1ea3</button>' +
+          '<button class="admin-filter-chip' + (state.filterFeatured === "hot" ? ' is-active' : '') + '" type="button" data-filter-featured-chip="hot">HOT</button>' +
+          '<button class="admin-filter-chip' + (state.filterFeatured === "normal" ? ' is-active' : '') + '" type="button" data-filter-featured-chip="normal">B\u00ecnh th\u01b0\u1eddng</button>' +
+        '</div>';
+      filtersPanel.appendChild(featuredSection);
+    }
+
+    root.querySelectorAll("[data-product-row]").forEach(function (row) {
+      var productId = row.getAttribute("data-product-row");
+      var product = state.products.find(function (item) { return item.id === productId; });
+      if (!product || !product.is_featured) return;
+
+      var title = row.querySelector(".admin-product-cell strong");
+      if (!title || title.parentElement.querySelector("[data-hot-badge]")) return;
+
+      var badge = document.createElement("span");
+      badge.className = "admin-status-chip is-warning";
+      badge.setAttribute("data-hot-badge", "true");
+      badge.textContent = "HOT";
+      title.insertAdjacentText("afterend", " ");
+      title.parentElement.insertBefore(badge, title.nextSibling.nextSibling);
+    });
+  }
+
   function render() {
+    var activeEl = document.activeElement;
+    var focusSelector = activeEl && activeEl.getAttribute("data-search-input") !== null ? "[data-search-input]" : null;
+    var cursorPos = focusSelector && typeof activeEl.selectionStart === "number" ? activeEl.selectionStart : null;
+
     document.body.classList.toggle("admin-modal-open", state.modalOpen);
     document.querySelectorAll("[data-admin-link]").forEach(function (link) {
       link.classList.toggle("is-active", link.getAttribute("data-admin-link") === "products");
@@ -374,6 +429,17 @@
     }
     syncFormToState();
     root.innerHTML = buildProductsView();
+    enhanceProductsAdminUi();
+
+    if (focusSelector) {
+      var el = root.querySelector(focusSelector);
+      if (el) {
+        el.focus();
+        if (cursorPos !== null) {
+          el.selectionStart = el.selectionEnd = cursorPos;
+        }
+      }
+    }
   }
 
   function setProductFeedback(message, type) {
@@ -500,6 +566,7 @@
       state.filterStatus = "all";
       state.filterCategory = "all";
       state.filterStock = "all";
+      state.filterFeatured = "all";
       state.currentPage = 1;
       render();
       return;
@@ -513,6 +580,9 @@
 
     var stockChip = event.target.closest("[data-filter-stock-chip]");
     if (stockChip) { state.filterStock = stockChip.getAttribute("data-filter-stock-chip"); state.currentPage = 1; render(); return; }
+
+    var featuredChip = event.target.closest("[data-filter-featured-chip]");
+    if (featuredChip) { state.filterFeatured = featuredChip.getAttribute("data-filter-featured-chip"); state.currentPage = 1; render(); return; }
 
     if (event.target.closest("[data-add-images]")) {
       persistentFileInput.click();

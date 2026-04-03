@@ -7,11 +7,16 @@ const authRoutes = require("./routes/auth.routes");
 const csrfProtection = require("./middleware/csrf-protection");
 
 const app = express();
+const allowedFrontendOrigins = new Set([
+  env.webOrigin,
+  `http://localhost:${env.webPort}`,
+  `http://127.0.0.1:${env.webPort}`
+]);
 
 app.use(
   cors({
     origin(origin, callback) {
-      if (!origin || origin === env.webOrigin) {
+      if (!origin || allowedFrontendOrigins.has(origin)) {
         callback(null, true);
         return;
       }
@@ -22,7 +27,7 @@ app.use(
   })
 );
 app.use(express.json());
-app.use(csrfProtection({ allowedOrigin: env.webOrigin }));
+app.use(csrfProtection({ allowedOrigins: Array.from(allowedFrontendOrigins) }));
 app.use("/uploads", express.static(path.resolve(process.cwd(), "uploads")));
 
 app.get("/", (_req, res) => {
@@ -33,7 +38,8 @@ app.get("/", (_req, res) => {
       auth: "/auth/google",
       health: "/api/health",
       products: "/api/products",
-      users: "/api/users"
+      users: "/api/users",
+      cart: "/api/cart"
     },
     frontend: env.baseUrl
   });

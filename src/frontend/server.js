@@ -24,6 +24,7 @@ const accountProfilePath = path.resolve(publicDir, "user", "account", "profile.h
 const accountAddressPath = path.resolve(publicDir, "user", "account", "address.html");
 const adminDashboardPath = path.resolve(publicDir, "admin", "index.html");
 const productDetailPath = path.resolve(publicDir, "product.html");
+const cartPagePath = path.resolve(publicDir, "cart.html");
 const searchPagePath = path.resolve(publicDir, "search.html");
 const headTemplatePath = path.resolve(publicDir, "partials", "head.html");
 const SITE_HEADER_TOKEN = "__SITE_HEADER__";
@@ -33,10 +34,12 @@ const ACCOUNT_LOOKUP_TIMEOUT_MS = 1500;
 const APP_SHELL_ROUTES = new Set([
   "/",
   "/index.html",
-  "/cart",
-  "/cart/",
   "/user/purchase",
   "/user/purchase/"
+]);
+const CART_ROUTES = new Set([
+  "/cart",
+  "/cart/"
 ]);
 const ACCOUNT_PROFILE_ROUTES = new Set([
   "/user/account/profile"
@@ -151,6 +154,10 @@ function isStorefrontRequest(pathname) {
 
 function isAccountProfileRequest(pathname) {
   return ACCOUNT_PROFILE_ROUTES.has(pathname);
+}
+
+function isCartRequest(pathname) {
+  return CART_ROUTES.has(pathname);
 }
 
 function isAccountAddressRequest(pathname) {
@@ -604,6 +611,26 @@ async function serveProductDetail(req, res) {
   }
 }
 
+async function serveCartPage(req, res) {
+  try {
+    const [template, headTemplate, user] = await Promise.all([
+      fs.promises.readFile(cartPagePath, "utf8"),
+      fs.promises.readFile(headTemplatePath, "utf8"),
+      fetchCurrentUser(req.headers.cookie || "")
+    ]);
+
+    writeResponse(
+      res,
+      200,
+      renderAccountShell(template, headTemplate, user),
+      contentTypes[".html"],
+      buildStaticHeaders(cartPagePath)
+    );
+  } catch (_error) {
+    writeResponse(res, 500, "Internal server error");
+  }
+}
+
 async function serveSearchPage(req, res) {
   try {
     const [template, headTemplate, user] = await Promise.all([
@@ -669,6 +696,11 @@ const server = http.createServer(async (req, res) => {
 
   if (isStorefrontRequest(url.pathname)) {
     await serveStorefront(req, res);
+    return;
+  }
+
+  if (isCartRequest(url.pathname)) {
+    await serveCartPage(req, res);
     return;
   }
 
