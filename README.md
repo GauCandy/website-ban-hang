@@ -1,248 +1,158 @@
-# Whitecat2
+# WhiteCat Store
 
-Node.js skeleton repo with:
+Website ban linh kien may tinh xay dung bang Node.js, Express va PostgreSQL.
 
-- backend API using Express
-- frontend web using a small Node static server
-- PostgreSQL database schema seed structure
-
-## Structure
+## Cau truc du an
 
 ```text
 src/
-  backend/
+  backend/            # API server (Express)
+    controllers/      # Xu ly logic: admin, auth, cart, products, users
+    middleware/        # CSRF, auth, upload anh
+    routes/           # Dinh nghia endpoints
     config/
-    controllers/
     db/
-    routes/
   database/
-  frontend/
+    migrations/       # 14 migration files
+    schema.sql
+  frontend/           # Web server (Express static)
     public/
+      index.html      # Trang chu
+      search.html     # Tim kiem san pham
+      product.html    # Chi tiet san pham
+      cart.html       # Gio hang
+      scripts/        # JS frontend (admin, cart, product-detail, ...)
+      styles/         # CSS
+uploads/
+  products/           # Anh san pham upload
 ```
+
+## Cai dat
+
+1. Copy `.env.example` thanh `.env` va dien thong tin:
+   - `DATABASE_URL` - PostgreSQL connection string
+   - `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `GOOGLE_REDIRECT_URI` - Google OAuth
+   - `JWT_SECRET` - Secret cho JSON Web Token
+
+2. Cai dependencies:
+   ```bash
+   npm install
+   ```
+
+3. Chay migration:
+   ```bash
+   npm run db:migrate
+   ```
+
+4. Chay dev:
+   ```bash
+   npm run dev
+   ```
 
 ## Scripts
 
-- `npm run dev` starts backend and frontend together
-- `npm run dev:backend` starts the API server
-- `npm run dev:frontend` starts the web server
-- `npm run db:migrate` applies pending database migrations
-- `npm run db:migrate:status` shows migration status
-- `npm run db:migrate:create -- add_table_name` creates a new migration pair
+| Script | Mo ta |
+| --- | --- |
+| `npm run dev` | Chay backend + frontend + cloudflared tunnel |
+| `npm run dev:backend` | Chay API server (co hot reload) |
+| `npm run dev:frontend` | Chay web server (co hot reload) |
+| `npm run db:migrate` | Ap dung migration |
+| `npm run db:migrate:down` | Rollback migration |
+| `npm run db:migrate:status` | Xem trang thai migration |
+| `npm run db:migrate:create -- <ten>` | Tao migration moi |
+| `npm start` | Chay backend (production) |
+| `npm run start:frontend` | Chay frontend (production) |
 
-## Default ports
+## Cong mac dinh
 
-- API: `API_PORT`, fallback `BACKEND_PORT` or `PORT`, default `8080`
-- web: `WEB_PORT`, fallback `FRONTEND_PORT`, default `3000`
+- Frontend: `WEB_PORT` (default `8080`)
+- Backend API: `API_PORT` (default `3000`)
 
-## Main env names
+## API Endpoints
 
-- `WEB_URL`: public URL of the frontend
-- `API_URL`: base URL the frontend uses to call the backend
-- `DATABASE_URL`: PostgreSQL connection string
+### Auth (`/auth`)
 
-The code still supports older names like `FRONTEND_PORT`, `BACKEND_PORT`, `BASE_URL`, and `API_BASE_URL` as fallback, but new config should use `WEB_*` and `API_*`.
+| Method | Path | Auth | Mo ta |
+| --- | --- | --- | --- |
+| `GET` | `/auth/google` | No | Bat dau Google OAuth |
+| `GET` | `/auth/callback` | No | Xu ly callback tu Google |
+| `GET` | `/auth/me` | Yes | Lay thong tin session |
+| `POST` | `/auth/logout` | No | Dang xuat |
 
-## Database versioning
+### Products (`/api/products`)
 
-Database schema changes are tracked in `src/database/migrations`. Run `npm run db:migrate` to apply pending versions to an existing PostgreSQL database.
+| Method | Path | Auth | Mo ta |
+| --- | --- | --- | --- |
+| `GET` | `/api/products` | No | Danh sach san pham (`limit`, `status`, `search`) |
+| `GET` | `/api/products/home` | No | San pham cho trang chu (featured, deals, ...) |
+| `GET` | `/api/products/:slug` | No | Chi tiet san pham theo slug |
 
-## Backend API inventory
+### Cart (`/api/cart`)
 
-The backend currently exposes `10` HTTP endpoints if you count the root docs route `/`, or `9` feature endpoints if you count only `/auth/*` and `/api/*`.
+| Method | Path | Auth | Mo ta |
+| --- | --- | --- | --- |
+| `GET` | `/api/cart` | Yes | Lay gio hang |
+| `POST` | `/api/cart/items` | Yes | Them san pham vao gio |
+| `PATCH` | `/api/cart/items/:productId` | Yes | Cap nhat so luong |
+| `DELETE` | `/api/cart/items/:productId` | Yes | Xoa san pham khoi gio |
+| `DELETE` | `/api/cart` | Yes | Xoa toan bo gio hang |
 
-### Route groups
+### Users (`/api/users`)
 
-- `/` returns a small backend status payload and the top-level docs links.
-- `/auth/*` handles Google OAuth login, session lookup, and logout.
-- `/api/health` exposes a simple health payload.
-- `/api/products/*` exposes product listing endpoints.
-- `/api/users/*` exposes current-user profile endpoints.
+| Method | Path | Auth | Mo ta |
+| --- | --- | --- | --- |
+| `GET` | `/api/users/me` | Yes | Thong tin user hien tai |
+| `PATCH` | `/api/users/me` | Yes | Cap nhat profile |
+| `GET` | `/api/users/me/address` | Yes | Lay dia chi mac dinh |
+| `PUT` | `/api/users/me/address` | Yes | Tao/cap nhat dia chi mac dinh |
+| `GET` | `/api/users/me/addresses` | Yes | Danh sach dia chi |
+| `POST` | `/api/users/me/addresses` | Yes | Them dia chi moi |
+| `PATCH` | `/api/users/me/addresses/:addressId` | Yes | Sua dia chi |
+| `DELETE` | `/api/users/me/addresses/:addressId` | Yes | Xoa dia chi |
+| `GET` | `/api/users` | No | Danh sach users (placeholder) |
 
-### Full endpoint list
+### Admin (`/api/admin`) - Yeu cau quyen admin
 
-| Method | Path | Auth | Description | Notes |
-| --- | --- | --- | --- | --- |
-| `GET` | `/` | No | Root docs/status endpoint | Returns `name`, `status`, docs links, and frontend URL |
-| `GET` | `/auth/google` | No | Starts Google OAuth flow | Redirects to Google and sets an OAuth state cookie |
-| `GET` | `/auth/callback` | No | Handles Google OAuth callback | Creates or updates local user, sets JWT cookie, then redirects to frontend |
-| `GET` | `/auth/me` | Yes | Returns basic authenticated session info | Reads user info from `req.auth` JWT payload |
-| `POST` | `/auth/logout` | No session required | Clears auth cookie and redirects to frontend | This route is subject to CSRF origin checking because it is a non-GET request |
-| `GET` | `/api/health` | No | Backend health payload | Only reports whether `DATABASE_URL` exists, it does not ping the database |
-| `GET` | `/api/products` | No | Lists products | Supports query params `limit`, `status`, `search` |
-| `GET` | `/api/products/home` | No | Returns homepage product sections | Supports query params `limit`, `search`; always uses `active` products |
-| `GET` | `/api/users/me` | Yes | Returns current logged-in user profile from DB | Reads `req.currentUser` after `requireAuth` |
-| `GET` | `/api/users` | No | Placeholder users endpoint | Still a skeleton endpoint returning `items: []` |
+| Method | Path | Mo ta |
+| --- | --- | --- |
+| `GET` | `/api/admin/categories` | Danh sach danh muc |
+| `POST` | `/api/admin/categories` | Tao danh muc |
+| `PATCH` | `/api/admin/categories/:categoryId` | Sua danh muc |
+| `DELETE` | `/api/admin/categories/:categoryId` | Xoa danh muc |
+| `GET` | `/api/admin/products` | Danh sach san pham (admin) |
+| `POST` | `/api/admin/products` | Tao san pham (ho tro upload max 8 anh) |
+| `PATCH` | `/api/admin/products/:productId` | Sua san pham |
+| `DELETE` | `/api/admin/products/:productId` | Xoa san pham |
 
-### Route details
+### Health
 
-#### `GET /`
+| Method | Path | Mo ta |
+| --- | --- | --- |
+| `GET` | `/api/health` | Trang thai backend |
 
-- Defined in `src/backend/app.js`
-- Purpose: quick backend heartbeat and route discovery
-- Response fields:
-  - `name`
-  - `status`
-  - `docs.auth`
-  - `docs.health`
-  - `docs.products`
-  - `docs.users`
-  - `frontend`
+## Middleware
 
-#### Auth routes
+- **CORS**: Chi chap nhan request tu `WEB_URL`
+- **CSRF**: Kiem tra `Origin`/`Referer` cho tat ca non-GET requests
+- **Auth**: JWT tu cookie, load user tu database
+- **Admin**: Kiem tra `role === 'admin'` truoc khi truy cap admin routes
+- **Upload**: Multer xu ly upload anh san pham (jpg, png, webp, gif)
 
-##### `GET /auth/google`
+## Database
 
-- Starts the Google OAuth flow
-- Requires env vars:
-  - `GOOGLE_CLIENT_ID`
-  - `GOOGLE_CLIENT_SECRET`
-  - `GOOGLE_REDIRECT_URI`
-- Sets an OAuth state cookie:
-  - `__Host-whitecat_oauth_state` when running on HTTPS
-  - `whitecat_oauth_state` otherwise
+14 migrations quan ly schema bao gom: users, auth_identities, products, categories, product_images, product_variants, shopping_cart, user addresses, va cac view ho tro.
 
-##### `GET /auth/callback`
+## Bien moi truong
 
-- Handles `code` and `state` returned by Google
-- Validates the state cookie before exchanging the code for tokens
-- Fetches Google profile info from Google userinfo API
-- Syncs user into local tables `users` and `auth_identities`
-- Sets login cookie:
-  - `__Host-whitecat_token` on HTTPS by default
-  - `whitecat_token` otherwise
-  - Can be overridden by `JWT_COOKIE_NAME` or `SESSION_COOKIE_NAME`
-- Redirect target: frontend home page `/`
-
-##### `GET /auth/me`
-
-- Protected by `requireAuth`
-- Response shape:
-
-```json
-{
-  "authenticated": true,
-  "user": {
-    "id": "...",
-    "email": "...",
-    "name": "...",
-    "provider": "google"
-  }
-}
-```
-
-##### `POST /auth/logout`
-
-- Clears the auth cookie and redirects to frontend home page
-- Because the app applies CSRF protection globally for non-safe methods, the request `Origin` or `Referer` must match `WEB_URL`
-
-#### Health route
-
-##### `GET /api/health`
-
-- Response shape:
-
-```json
-{
-  "status": "ok",
-  "service": "backend",
-  "timestamp": "2026-03-20T00:00:00.000Z",
-  "databaseConfigured": true
-}
-```
-
-- `databaseConfigured` only checks whether `DATABASE_URL` exists in env
-
-#### Product routes
-
-##### `GET /api/products`
-
-- Public product listing endpoint
-- Query params:
-  - `limit`: default `24`, max `60`
-  - `status`: default `active`; pass `all` to skip status filtering
-  - `search`: matches product `name` and `short_description`
-- Response shape:
-
-```json
-{
-  "items": [],
-  "total": 0
-}
-```
-
-##### `GET /api/products/home`
-
-- Public endpoint for homepage product blocks
-- Query params:
-  - `limit`: default `48`, max `60`
-  - `search`: optional text filter
-- Always forces `status = active`
-- Response sections:
-  - `hero_stats`
-  - `spotlight_products`
-  - `deal_products`
-  - `latest_products`
-  - `in_stock_products`
-  - `budget_products`
-  - `all_products`
-
-#### User routes
-
-##### `GET /api/users/me`
-
-- Protected by `requireAuth`
-- Reads the current user from the database, not only from JWT
-- Response shape:
-
-```json
-{
-  "user": {
-    "uid": "...",
-    "full_name": "...",
-    "email": "...",
-    "phone_number": "...",
-    "gender": "...",
-    "birth_date": "...",
-    "avatar_url": "...",
-    "role": "...",
-    "account_status": "...",
-    "marketing_opt_in": true,
-    "last_login_at": "...",
-    "created_at": "...",
-    "updated_at": "..."
-  }
-}
-```
-
-##### `GET /api/users`
-
-- Placeholder endpoint for future users listing
-- Current response:
-
-```json
-{
-  "items": [],
-  "message": "Skeleton endpoint. Replace with a real database query."
-}
-```
-
-### Auth and middleware notes
-
-- CORS allows requests only when `Origin` matches `WEB_URL`, except requests without an origin header.
-- `requireAuth` reads JWT from cookie and loads the full user row from the `users` table.
-- If JWT is missing, invalid, expired, or the linked user no longer has an auth identity, protected endpoints return `401`.
-- Global CSRF protection applies to all non-safe methods: `POST`, `PUT`, `PATCH`, `DELETE`, and any other method outside `GET`, `HEAD`, `OPTIONS`.
-- Current protected endpoints:
-  - `GET /auth/me`
-  - `GET /api/users/me`
-
-### Common error responses
-
-- `401 Unauthorized`: missing or invalid login cookie on protected routes
-- `403 Forbidden`: blocked by CSRF protection when request origin is not allowed
-- `404 Not Found`: route does not exist
-- `500 Internal Server Error`: unexpected backend exception
-
-## Next step
-
-Replace placeholder routes, UI blocks, and SQL schema with your real app logic. For backend work, use the API inventory above as the current source of truth for exposed routes.
+| Ten | Mo ta | Mac dinh |
+| --- | --- | --- |
+| `WEB_PORT` | Port frontend | `8080` |
+| `WEB_URL` | URL public cua frontend | `http://localhost:8080` |
+| `API_PORT` | Port backend | `3000` |
+| `API_URL` | URL backend cho frontend goi | `http://localhost:3000` |
+| `DATABASE_URL` | PostgreSQL connection string | - |
+| `GOOGLE_CLIENT_ID` | Google OAuth client ID | - |
+| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret | - |
+| `GOOGLE_REDIRECT_URI` | Google OAuth redirect URI | - |
+| `JWT_SECRET` | Secret key cho JWT | - |
+| `JWT_COOKIE_NAME` | Ten cookie JWT | `__Host-whitecat_token` |
